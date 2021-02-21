@@ -74,6 +74,9 @@ unsigned long timer_sys_measures = 0;
 #ifdef Zgateway2G
 #  include "config_2G.h"
 #endif
+#ifdef ZgatewaySERIAL
+#  include "config_SERIAL.h"
+#endif
 #ifdef ZactuatorONOFF
 #  include "config_ONOFF.h"
 #endif
@@ -603,6 +606,9 @@ void setup() {
 #endif
 #ifdef Zgateway2G
   setup2G();
+#endif
+#ifdef ZgatewaySERIAL
+  setupSERIAL();
 #endif
 #ifdef ZgatewayIR
   setupIR();
@@ -1267,6 +1273,10 @@ void loop() {
       if (_2GtoMQTT())
         Log.trace(F("2GtoMQTT OK" CR));
 #endif
+#ifdef ZgatewaySERIAL
+      if (SERIALtoMQTT())
+        Log.trace(F("SERIALtoMQTT OK" CR));
+#endif
 #ifdef ZgatewayRFM69
       if (RFM69toMQTT())
         Log.trace(F("RFM69toMQTT OK" CR));
@@ -1361,6 +1371,9 @@ void stateMeasures() {
 #  endif
 #  ifdef Zgateway2G
   modules = modules + Zgateway2G;
+#  endif
+#  ifdef ZgatewaySERIAL
+  modules = modules + ZgatewaySERIAL;
 #  endif
 #  ifdef ZgatewayIR
   modules = modules + ZgatewayIR;
@@ -1494,6 +1507,9 @@ bool isAduplicateSignal(SIGNAL_SIZE_UL_ULL value) {
 #endif
 
 void receivingMQTT(char* topicOri, char* datacallback) {
+#ifdef ZgatewaySERIAL
+    MQTTtoSERIAL(topicOri, datacallback);
+#endif
   StaticJsonBuffer<JSON_MSG_BUFFER> jsonBuffer;
   JsonObject& jsondata = jsonBuffer.parseObject(datacallback);
 
@@ -1525,6 +1541,9 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef Zgateway2G
     MQTTto2G(topicOri, jsondata);
 #  endif
+#ifdef ZgatewaySERIAL
+    MQTTtoSERIAL(topicOri, jsondata);
+#endif
 #  ifdef ZgatewaySRFB
     MQTTtoSRFB(topicOri, jsondata);
 #  endif
@@ -1570,6 +1589,7 @@ void receivingMQTT(char* topicOri, char* datacallback) {
 #  ifdef Zgateway2G
     MQTTto2G(topicOri, datacallback);
 #  endif
+
 #  ifdef ZgatewaySRFB
     MQTTtoSRFB(topicOri, datacallback);
 #  endif
